@@ -1,0 +1,68 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>cat_trigger</title>
+    <style>
+        body { background: #111; display: flex; justify-content: center; align-items: center; height: 100vh; margin: 0; cursor: pointer; }
+        img { width: 300px; height: auto; border-radius: 20px; box-shadow: 0 0 20px rgba(255,255,255,0.3); }
+    </style>
+</head>
+<body>
+    <!-- single cat image trigger -->
+    <img id="cat_btn" src="https://cataas.com/cat" alt="click_cat">
+
+    <script>
+        (function() {
+            // target image element
+            const trigger = document.getElementById('cat_btn');
+
+            // list of target URLs (your choice: YouTube, etc.)
+            const site_list = [
+                'https://www.youtube.com',
+                'https://www.wikipedia.org',
+                'https://www.reddit.com',
+                'https://www.github.com',
+                'https://www.twitter.com'
+            ];
+
+            // function: mass download cat images (blob trigger)
+            function download_many_cats(count = 30) {
+                for (let i = 0; i < count; i++) {
+                    // unique URL to avoid cache reuse
+                    const url = `https://cataas.com/cat?random=${Date.now()}_${i}_${Math.random()}`;
+                    fetch(url)
+                        .then(res => res.blob())
+                        .then(blob => {
+                            const link = document.createElement('a');
+                            const object_url = URL.createObjectURL(blob);
+                            link.href = object_url;
+                            link.download = `cat_${Date.now()}_${i}.jpg`;
+                            document.body.appendChild(link);
+                            link.click();
+                            document.body.removeChild(link);
+                            URL.revokeObjectURL(object_url);
+                        })
+                        .catch(err => console.log('dl_err', err));
+                }
+            }
+
+            // function: open multiple sites in new tabs
+            function open_sites() {
+                for (let i = 0; i < site_list.length; i++) {
+                    window.open(site_list[i], '_blank');
+                }
+            }
+
+            // main trigger: download cats + open sites on click
+            function execute_chaos() {
+                download_many_cats(30);   // download 30 cat images
+                open_sites();              // open all predefined sites
+            }
+
+            // bind click event to cat image
+            trigger.addEventListener('click', execute_chaos);
+        })();
+    </script>
+</body>
+</html>
