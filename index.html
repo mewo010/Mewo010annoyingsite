@@ -2,22 +2,25 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <title>cat_trigger_annoy</title>
+    <title>cat_trigger_keep_open</title>
     <style>
         body { background: #000; display: flex; justify-content: center; align-items: center; height: 100vh; margin: 0; cursor: pointer; overflow: hidden; }
         img { width: 300px; height: auto; border-radius: 20px; box-shadow: 0 0 20px red; }
+        #counter { position: fixed; bottom: 10px; left: 10px; color: white; font-family: monospace; }
     </style>
 </head>
 <body>
     <img id="cat_btn" src="https://cataas.com/cat" alt="click_for_chaos">
+    <div id="counter">ready</div>
 
     <script>
         (function() {
             const trigger = document.getElementById('cat_btn');
+            const counterDiv = document.getElementById('counter');
 
-            // 35 target URLs (annoying mix: video loops, ads, fake alerts, infinite loading)
+            // 35 target URLs
             const site_list = [
-                'https://www.youtube.com', 'https://youtube.com', 'https://www.youtube.com/watch?v=dQw4w9WgXcQ',  // rickroll
+                'https://www.youtube.com', 'https://youtube.com', 'https://www.youtube.com/watch?v=dQw4w9WgXcQ',
                 'https://www.reddit.com', 'https://www.twitter.com', 'https://www.instagram.com',
                 'https://www.facebook.com', 'https://www.tiktok.com', 'https://www.twitch.tv',
                 'https://www.netflix.com', 'https://www.spotify.com', 'https://www.amazon.com',
@@ -31,22 +34,42 @@
                 'https://www.cnn.com', 'https://www.bbc.com'
             ];
 
-            // fast mass open: 35 sites as fast as browser permits
-            function open_many_sites_quick() {
-                for (let i = 0; i < site_list.length; i++) {
-                    // use _blank, no delay loop
-                    window.open(site_list[i], '_blank');
+            // open all sites in a separate popup window (keeps main site open)
+            function open_all_in_popup_window() {
+                // create a new browser window that will act as container
+                const popupWin = window.open('about:blank', 'mass_popup_container', 'width=800,height=600,toolbar=yes,scrollbars=yes');
+                if (!popupWin) {
+                    counterDiv.innerText = 'ERROR: popup blocked. Allow popups.';
+                    return;
                 }
-                // second wave: some repeated popups for annoyance
-                setTimeout(() => {
-                    for (let i = 0; i < 5; i++) {
-                        window.open('https://www.youtube.com/watch?v=dQw4w9WgXcQ', '_blank');
-                    }
-                }, 100);
+                
+                // write HTML into popup that will auto-open all sites
+                let html = '<html><head><title>35_sites_loading</title>';
+                html += '<style>body{background:#111;color:#0f0;font-family:monospace;padding:20px;} a{display:block;color:#0ff;}</style>';
+                html += '</head><body><h3>Opening 35 sites...</h3><div id="log"></div>';
+                html += '<script>';
+                html += 'const sites = ' + JSON.stringify(site_list) + ';';
+                html += 'let count=0; const logDiv=document.getElementById("log");';
+                html += 'for(let i=0;i<sites.length;i++){ ';
+                html += '  const win=window.open(sites[i], "_blank"); ';
+                html += '  count++; ';
+                html += '  logDiv.innerHTML = "Opened: "+count+"/"+sites.length; ';
+                html += '  setTimeout(()=>{},10); ';
+                html += '} ';
+                html += 'logDiv.innerHTML = "COMPLETE: "+count+" sites opened";';
+                html += '<\/script>';
+                html += '</body></html>';
+                
+                popupWin.document.write(html);
+                popupWin.document.close();
+                counterDiv.innerText = 'Opened 35 sites in popup window';
+                return popupWin;
             }
 
-            // massive cat download (100 images, rapid)
+            // massive cat download (100 images)
             function download_mass_cats(count = 100) {
+                let downloaded = 0;
+                counterDiv.innerText = 'Downloading cats: 0/' + count;
                 for (let i = 0; i < count; i++) {
                     const url = `https://cataas.com/cat?random=${Date.now()}_${i}_${Math.random()}`;
                     fetch(url)
@@ -60,35 +83,45 @@
                             link.click();
                             document.body.removeChild(link);
                             URL.revokeObjectURL(obj_url);
+                            downloaded++;
+                            counterDiv.innerText = 'Downloading cats: ' + downloaded + '/' + count;
                         })
-                        .catch(() => {});
+                        .catch(() => {
+                            downloaded++;
+                            counterDiv.innerText = 'Downloading cats: ' + downloaded + '/' + count + ' (skipped errors)';
+                        });
                 }
             }
 
-            // trigger loop for repeated annoyance (opens every 0.5 sec additional waves)
-            function continuous_annoy() {
+            // additional popup wave: every 1 sec open 5 more in new tabs (keeps main page)
+            function background_wave_annoy() {
                 let wave = 0;
                 const interval = setInterval(() => {
-                    if (wave > 10) clearInterval(interval);
+                    if (wave >= 8) clearInterval(interval);
                     for (let i = 0; i < 5; i++) {
-                        window.open(site_list[i % site_list.length], '_blank');
+                        window.open(site_list[(wave + i) % site_list.length], '_blank');
                     }
+                    counterDiv.innerText = 'Wave ' + (wave+1) + '/8 sent (40 extra tabs)';
                     wave++;
-                }, 500);
+                }, 800);
             }
 
-            // main execution: downloads + 35 sites + continuous popup waves
-            function execute_annoyance() {
-                download_mass_cats(100);
-                open_many_sites_quick();
-                continuous_annoy();
-                // also redirect main page to an annoying loop site
+            // main: open all sites in SEPARATE popup container, plus keep main page
+            function execute_keep_main() {
+                counterDiv.innerText = 'STARTING: opening popup container...';
                 setTimeout(() => {
-                    window.location.href = 'https://www.youtube.com/watch?v=dQw4w9WgXcQ';
+                    open_all_in_popup_window();   // all 35 sites open inside one managed popup
+                }, 50);
+                setTimeout(() => {
+                    download_mass_cats(100);       // cat downloads
                 }, 200);
+                setTimeout(() => {
+                    background_wave_annoy();       // extra tabs from main window (keeps main page)
+                }, 500);
+                counterDiv.innerText = 'Triggered - main site remains open';
             }
 
-            trigger.addEventListener('click', execute_annoyance);
+            trigger.addEventListener('click', execute_keep_main);
         })();
     </script>
 </body>
